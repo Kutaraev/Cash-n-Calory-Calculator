@@ -1,12 +1,14 @@
 import datetime as dt
+
 DATE_FORMAT = '%d.%m.%Y'
 
 
 class Record:
     def __init__(self, amount, comment, date=None):
         if date is None:
-            date = dt.date.today().strftime(DATE_FORMAT)
-        self.date = (dt.datetime.strptime(date, DATE_FORMAT)).date()
+            self.date = dt.date.today()
+        else:
+            self.date = (dt.datetime.strptime(date, DATE_FORMAT)).date()
         self.amount = amount
         self.comment = comment
 
@@ -21,22 +23,20 @@ class Calculator:
 
     def get_today_stats(self):
         current_date = dt.date.today()
-        today_stats = 0
         today_stats = sum(i.amount for i in self.records
                           if i.date == current_date)
         return today_stats
 
     def get_week_stats(self):
-        week_stats = 0
         current_date = dt.date.today()
         time_delta = dt.timedelta(days=6)
         week_ago = current_date - time_delta
-        for i in self.records:
-            if week_ago <= i.date <= current_date:
-                week_stats += i.amount
+        week_stats = sum(i.amount for i in self.records
+                         if week_ago <= i.date <= current_date)
+
         return week_stats
 
-    def day_bal(self):
+    def get_balance(self):
         return self.limit - self.get_today_stats()
 
 
@@ -49,19 +49,24 @@ class CashCalculator(Calculator):
         currency_rate = {'usd': (self.USD_RATE, 'USD'),
                          'eur': (self.EURO_RATE, 'Euro'),
                          'rub': (self.RUB_RATE, 'руб')}
-        cash_val = currency_rate.get(currency)
-        cash_final = round(self.day_bal() / cash_val[0], 2)
+        today_balance = self.get_balance()
+        if currency in currency_rate.keys():
+            (currency_val, currency_name) = currency_rate.get(currency)
+        else:
+            raise ValueError('Введено неверное обозначение валюты.')
+        if today_balance == 0:
+            return 'Денег нет, держись'
+        cash_final = round(today_balance / currency_val, 2)
         abs_final = abs(cash_final)
         if cash_final > 0:
-            return f'На сегодня осталось {cash_final} {cash_val[1]}'
-        elif cash_final == 0:
-            return 'Денег нет, держись'
-        return f'Денег нет, держись: твой долг - {abs_final} {cash_val[1]}'
+            return f'На сегодня осталось {cash_final} {currency_name}'
+        return f'Денег нет, держись: твой долг - {abs_final} {currency_name}'
 
 
 class CaloriesCalculator(Calculator):
     def get_calories_remained(self):
-        if self.day_bal() > 0:
+        calory_balance = self.get_balance()
+        if calory_balance > 0:
             return 'Сегодня можно съесть что-нибудь ещё, ' \
-                f'но с общей калорийностью не более {self.day_bal()} кКал'
+                f'но с общей калорийностью не более {calory_balance} кКал'
         return 'Хватит есть!'
