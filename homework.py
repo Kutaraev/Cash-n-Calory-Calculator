@@ -8,7 +8,7 @@ class Record:
         if date is None:
             self.date = dt.date.today()
         else:
-            self.date = (dt.datetime.strptime(date, DATE_FORMAT)).date()
+            self.date = dt.datetime.strptime(date, DATE_FORMAT).date()
         self.amount = amount
         self.comment = comment
 
@@ -29,11 +29,9 @@ class Calculator:
 
     def get_week_stats(self):
         current_date = dt.date.today()
-        time_delta = dt.timedelta(days=6)
-        week_ago = current_date - time_delta
+        week_ago = current_date - dt.timedelta(days=6)
         week_stats = sum(i.amount for i in self.records
                          if week_ago <= i.date <= current_date)
-
         return week_stats
 
     def get_balance(self):
@@ -50,16 +48,15 @@ class CashCalculator(Calculator):
                          'eur': (self.EURO_RATE, 'Euro'),
                          'rub': (self.RUB_RATE, 'руб')}
         today_balance = self.get_balance()
-        if currency in currency_rate.keys():
-            (currency_val, currency_name) = currency_rate.get(currency)
-        else:
+        if currency not in currency_rate:
             raise ValueError('Введено неверное обозначение валюты.')
+        (currency_val, currency_name) = currency_rate.get(currency)
         if today_balance == 0:
             return 'Денег нет, держись'
         cash_final = round(today_balance / currency_val, 2)
-        abs_final = abs(cash_final)
         if cash_final > 0:
             return f'На сегодня осталось {cash_final} {currency_name}'
+        abs_final = abs(cash_final)
         return f'Денег нет, держись: твой долг - {abs_final} {currency_name}'
 
 
@@ -67,6 +64,6 @@ class CaloriesCalculator(Calculator):
     def get_calories_remained(self):
         calory_balance = self.get_balance()
         if calory_balance > 0:
-            return 'Сегодня можно съесть что-нибудь ещё, ' \
-                f'но с общей калорийностью не более {calory_balance} кКал'
+            return ('Сегодня можно съесть что-нибудь ещё, '
+                    f'но с общей калорийностью не более {calory_balance} кКал')
         return 'Хватит есть!'
