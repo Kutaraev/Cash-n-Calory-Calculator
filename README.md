@@ -14,7 +14,7 @@
 ## Установка
 Клонировать репозиторий:
 ```
-    git clone https://github.com/Kutaraev/Cash-n-Calory-Calculator.git
+git clone https://github.com/Kutaraev/Cash-n-Calory-Calculator.git
 ```
 
 ## Функционал
